@@ -1,0 +1,11 @@
+# Laravel core ignores
+bc-cms/vendor
+bc-cms/node_modules
+bc-cms/.env
+bc-cms/storage/*.key
+bc-cms/storage/logs/*
+bc-cms/storage/framework/*
+bc-cms/bootstrap/cache/*
+
+# macOS
+.DS_Store
