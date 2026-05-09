@@ -55,7 +55,7 @@ class SearchController extends Controller
         }
 
         // List all bookable service types
-        $serviceTypes = ['hotel', 'tour', 'car', 'boat', 'space', 'flight'];
+        $serviceTypes = ['hotel', 'tour', 'car', 'boat', 'space', 'flight', 'food', 'event'];
 
         $allServices = collect();
 
@@ -152,7 +152,7 @@ class SearchController extends Controller
         try {
             // Get the data using dataForApi method
             $data = $row->dataForApi(true);
-            
+
             // Add author_id and service_type to the response
             if (is_array($data)) {
                 $data['author_id'] = $row->author_id ?? null;

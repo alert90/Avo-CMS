@@ -68,8 +68,6 @@ Route::group(['prefix' => 'user', 'middleware' => ['auth:sanctum']], function ($
     Route::delete('/wishlist/{object_model}/{object_id}', 'UserController@deleteWishList')->name("api.user.wishList.delete");
     Route::get('/wishlist','UserController@indexWishlist')->name("api.user.wishList.index");
     Route::post('/permanently_delete','UserController@permanentlyDelete')->name("user.permanently.delete");
-    Route::get('vendor/dashboard', 'UserController@getVendorDashboard')->name("api.vendor.dashboard");
-    Route::post('vendor/reload-chart', 'UserController@reloadVendorChart')->name("api.vendor.reload_chart");
     Route::post('update-activity', [\Modules\Api\Controllers\UserStatusController::class, 'updateActivity']);
     Route::post('check-online-status', [\Modules\Api\Controllers\UserStatusController::class, 'checkOnlineStatus']);
 });
@@ -104,6 +102,7 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::get('/{code}/thankyou','BookingController@thankyou')->name('booking.thankyou');
     Route::get('/{code}/checkout','BookingController@checkout');
     Route::get('/{code}/check-status','BookingController@checkStatusCheckout');
+    Route::post('/{code}/scan', 'BookingController@recordScan')->name('api.booking.scan');
 });
 
 /* Gateways */
@@ -122,4 +121,49 @@ Route::get('current-settings', 'SettingController@getCurrentSettings')->name('ap
 /* Media */
 Route::group(['prefix'=>'media','middleware' => 'auth:sanctum'],function(){
     Route::post('/store','MediaController@store')->name("api.media.store");
+});
+
+/* Vendor API Routes - Protected */
+Route::group(['prefix'=>'vendor','middleware' => 'auth:sanctum'],function(){
+
+    // Dashboard
+    Route::get('dashboard', [\Modules\Api\Controllers\Vendor\VendorController::class, 'dashboard'])->name("api.vendor.dashboard");
+
+    // Services Management
+    Route::get('services', [\Modules\Api\Controllers\Vendor\VendorController::class, 'services'])->name("api.vendor.services");
+    Route::get('services/{type}/{id}', [\Modules\Api\Controllers\Vendor\VendorController::class, 'serviceDetail'])->name("api.vendor.service.detail");
+    Route::post('services/{type}', [\Modules\Api\Controllers\Vendor\VendorController::class, 'createService'])->name("api.vendor.service.create");
+    Route::put('services/{type}/{id}', [\Modules\Api\Controllers\Vendor\VendorController::class, 'updateService'])->name("api.vendor.service.update");
+    Route::delete('services/{type}/{id}', [\Modules\Api\Controllers\Vendor\VendorController::class, 'deleteService'])->name("api.vendor.service.delete");
+    Route::post('services/{type}/{id}/bulk', [\Modules\Api\Controllers\Vendor\VendorController::class, 'bulkEditService'])->name("api.vendor.service.bulk");
+
+    // Bookings Management
+    Route::get('bookings', [\Modules\Api\Controllers\Vendor\VendorController::class, 'bookings'])->name("api.vendor.bookings");
+    Route::get('bookings/{id}', [\Modules\Api\Controllers\Vendor\VendorController::class, 'bookingDetail'])->name("api.vendor.booking.detail");
+    Route::put('bookings/{id}/status', [\Modules\Api\Controllers\Vendor\VendorController::class, 'updateBookingStatus'])->name("api.vendor.booking.update_status");
+
+    // Enquiries Management
+    Route::get('enquiries', [\Modules\Api\Controllers\Vendor\VendorController::class, 'enquiries'])->name("api.vendor.enquiries");
+    Route::post('enquiries/{id}/reply', [\Modules\Api\Controllers\Vendor\VendorController::class, 'replyEnquiry'])->name("api.vendor.enquiry.reply");
+
+    // News Management
+    Route::get('news', [\Modules\Api\Controllers\Vendor\VendorController::class, 'news'])->name("api.vendor.news");
+    Route::post('news', [\Modules\Api\Controllers\Vendor\VendorController::class, 'createNews'])->name("api.vendor.news.create");
+    Route::put('news/{id}', [\Modules\Api\Controllers\Vendor\VendorController::class, 'updateNews'])->name("api.vendor.news.update");
+    Route::delete('news/{id}', [\Modules\Api\Controllers\Vendor\VendorController::class, 'deleteNews'])->name("api.vendor.news.delete");
+
+    // Verification
+    Route::get('verification', [\Modules\Api\Controllers\Vendor\VendorController::class, 'verification'])->name("api.vendor.verification");
+    Route::post('verification', [\Modules\Api\Controllers\Vendor\VendorController::class, 'submitVerification'])->name("api.vendor.verification.submit");
+
+    // Payout Management
+    Route::get('payouts', [\Modules\Api\Controllers\Vendor\VendorController::class, 'payouts'])->name("api.vendor.payouts");
+    Route::post('payouts/request', [\Modules\Api\Controllers\Vendor\VendorController::class, 'createPayoutRequest'])->name("api.vendor.payouts.request");
+    Route::get('payouts/methods', [\Modules\Api\Controllers\Vendor\VendorController::class, 'payoutMethods'])->name("api.vendor.payouts.methods");
+    Route::post('payouts/methods', [\Modules\Api\Controllers\Vendor\VendorController::class, 'setPayoutMethod'])->name("api.vendor.payouts.methods.set");
+
+    // Availability Management
+    Route::get('availability/{type}/{id}', [\Modules\Api\Controllers\Vendor\VendorController::class, 'getAvailability'])->name("api.vendor.availability");
+    Route::post('availability/{type}/{id}', [\Modules\Api\Controllers\Vendor\VendorController::class, 'updateAvailability'])->name("api.vendor.availability.update");
+
 });

@@ -108,7 +108,7 @@ class ModuleProvider extends ModuleServiceProvider
                 'url'   => route('food.vendor.index'),
                 'title'      => __("Manage Food"),
                 'icon'       => Food::getServiceIconFeatured(),
-                'position'   => 81,
+                'position'   => 79,
                 'permission' => 'food_view',
                 'children' => [
                     [

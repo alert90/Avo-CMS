@@ -288,6 +288,10 @@ class Booking extends BaseModel
     {
         return $this->hasOne(User::class, "id", 'vendor_id');
     }
+    public function customer()
+    {
+        return $this->hasOne(User::class, "id", 'customer_id');
+    }
 
     public static function getRecentBookings($limit = 10,$vendor_id = false)
     {
@@ -472,14 +476,17 @@ class Booking extends BaseModel
         $res = [];
         $total_money = parent::selectRaw('sum( `total_before_fees` - `commission` + `vendor_service_fee_amount` ) AS total_price , sum( CASE WHEN `status` = "completed" THEN `total_before_fees` - `commission` + `vendor_service_fee_amount` ELSE NULL END ) AS total_earning')->whereNotIn('status',static::$notAcceptedStatus)->where("vendor_id", $user_id)->first();
         $total_booking = parent::whereNotIn('status',static::$notAcceptedStatus)->where("vendor_id", $user_id)->count('id');
+
+        // Count services by author_id (vendor)
         $total_service = 0;
         $services = get_bookable_services();
         if(!empty($services))
         {
             foreach ($services as $service){
-                $total_service += $service::where('status', 'publish')->where("create_user", $user_id)->count('id');
+                $total_service += $service::where('status', 'publish')->where("author_id", $user_id)->count('id');
             }
         }
+
         $res[] = [
             'title'  => __("Pending"),
             'amount' => format_money_main($total_money->total_price - $total_money->total_earning),

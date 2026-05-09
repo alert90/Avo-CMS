@@ -71,8 +71,15 @@
                     <div class="g-control">
                         <div class="form-group">
                             <label>{{ __('Map Latitude') }}:</label>
-                            <input type="text" name="map_lat" class="form-control" value="{{ $row->map_lat }}"
-                                onkeydown="return event.key !== 'Enter';">
+                            <div class="input-group">
+                                <input type="text" name="map_lat" class="form-control" value="{{ $row->map_lat }}"
+                                    onkeydown="return event.key !== 'Enter';">
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-info btn-sm btn-use-my-location" title="{{ __('Use my location') }}">
+                                        <i class="fa fa-crosshairs"></i>
+                                    </button>
+                                </span>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>{{ __('Map Longitude') }}:</label>

@@ -174,6 +174,86 @@
                         $("input[name=map_lat]").attr("value", dataLatLng[0]);
                         $("input[name=map_lng]").attr("value", dataLatLng[1]);
                     });
+
+                    // Use My Location button handler
+                    $('.btn-use-my-location').on('click', function(e) {
+                        e.preventDefault();
+                        var $btn = $(this);
+                        var originalHtml = $btn.html();
+
+                        if (!navigator.geolocation) {
+                            alert('{{ __("Geolocation is not supported by your browser") }}');
+                            return;
+                        }
+
+                        // Show loading state
+                        $btn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i>');
+
+                        var watchId = null;
+                        var timeoutId = setTimeout(function() {
+                            if (watchId) {
+                                navigator.geolocation.clearWatch(watchId);
+                            }
+                            $btn.prop('disabled', false).html(originalHtml);
+                            alert('{{ __("Location request timed out. Please try again.") }}');
+                        }, 15000); // 15 second timeout
+
+                        // First try to get a quick position, then improve accuracy
+                        navigator.geolocation.getCurrentPosition(
+                            function(position) {
+                                clearTimeout(timeoutId);
+                                if (watchId) {
+                                    navigator.geolocation.clearWatch(watchId);
+                                }
+
+                                var lat = position.coords.latitude;
+                                var lng = position.coords.longitude;
+
+                                // Update input fields
+                                $("input[name=map_lat]").val(lat);
+                                $("input[name=map_lng]").val(lng);
+                                $("input[name=map_zoom]").val(16);
+
+                                // Update map
+                                engineMap.clearMarkers();
+                                engineMap.addMarker([lat, lng], {
+                                    icon_options: {}
+                                });
+                                engineMap.setCenter([lat, lng]);
+                                engineMap.setZoom(16);
+
+                                $btn.prop('disabled', false).html(originalHtml);
+                            },
+                            function(error) {
+                                clearTimeout(timeoutId);
+                                if (watchId) {
+                                    navigator.geolocation.clearWatch(watchId);
+                                }
+                                var errorMessage = '';
+                                switch(error.code) {
+                                    case error.PERMISSION_DENIED:
+                                        errorMessage = '{{ __("Location permission denied. Please allow location access.") }}';
+                                        break;
+                                    case error.POSITION_UNAVAILABLE:
+                                        errorMessage = '{{ __("Location information unavailable.") }}';
+                                        break;
+                                    case error.TIMEOUT:
+                                        errorMessage = '{{ __("Location request timed out. Please try again.") }}';
+                                        break;
+                                    default:
+                                        errorMessage = '{{ __("An unknown error occurred.") }}';
+                                        break;
+                                }
+                                alert(errorMessage);
+                                $btn.prop('disabled', false).html(originalHtml);
+                            },
+                            {
+                                enableHighAccuracy: true,
+                                timeout: 15000,
+                                maximumAge: 0
+                            }
+                        );
+                    });
                 }
             });
         })

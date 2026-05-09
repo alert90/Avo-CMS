@@ -6,6 +6,7 @@ use Modules\Booking\Models\Booking;
 use Modules\Booking\Models\Enquiry;
 use Modules\Template\Models\Template;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class BookingController extends \Modules\Booking\Controllers\BookingController
 {
@@ -206,4 +207,59 @@ class BookingController extends \Modules\Booking\Controllers\BookingController
         }
         return $list;
     }
+
+    public function recordScan(Request $request, $code)
+{
+    $booking = Booking::where('code', $code)->first();
+
+    if (!$booking) {
+        return response()->json(['status' => 0, 'message' => 'Booking not found'], 404);
+    }
+
+    $user = Auth::user();
+
+    if (!$user) {
+        return response()->json(['status' => 0, 'message' => 'Authentication required'], 401);
+    }
+
+    $roleId = $user->role_id;
+
+    // permission check
+    if (!in_array($roleId, [1, 3])) {
+        return response()->json(['status' => 0, 'message' => 'Not allowed'], 403);
+    }
+
+    // vendor restriction
+    if ($roleId == 3 && $booking->vendor_id != $user->id) {
+        return response()->json(['status' => 0, 'message' => 'Not your booking'], 403);
+    }
+
+    // 🔥 ALWAYS LOG SCAN (NO DUPLICATE BLOCK)
+    DB::table('booking_scans')->insert([
+        'booking_id' => $booking->id,
+        'scanned_by' => $user->id,
+        'role_id' => $roleId,
+        'scan_type' => $request->input('type', 'verify'),
+        'ip_address' => $request->ip(),
+        'created_at' => now(),
+        'updated_at' => now()
+    ]);
+
+    // optional business logic
+    if ($booking->status == 'processing') {
+        $booking->status = 'completed';
+        $booking->save();
+    }
+
+    return response()->json([
+        'status' => 1,
+        'message' => 'Scan recorded',
+        'data' => [
+            'scanned_by' => $user->id,
+            'role' => $roleId,
+            'booking_code' => $booking->code
+        ]
+    ]);
 }
+}
+
