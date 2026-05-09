@@ -324,25 +324,22 @@ class User extends Authenticatable implements MustVerifyEmail
             return $value->order ?? 0;
         }));
 
-        $res = [];
+        $res = new \stdClass();
 
         $accounts = $this->payout_accounts;
 
         if (!empty($vendor_payout_methods) and !empty($accounts)) {
             foreach ($vendor_payout_methods as $vendor_payout_method) {
                 $id = $vendor_payout_method->id;
-
                 if (!empty($accounts->$id)) {
                     $vendor_payout_method->user = $accounts->$id;
-                    $res[$id] = $vendor_payout_method;
+                    $res->$id = $vendor_payout_method;
                 }
             }
         }
 
         return $res;
     }
-
-
     /**
      * @return array
      * @todo get All Fields That you need to verification

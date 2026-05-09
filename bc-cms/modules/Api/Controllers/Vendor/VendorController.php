@@ -651,9 +651,15 @@ class VendorController extends Controller
             return $this->sendError(__('No payout methods available'));
         }
 
+        // ✅ Ensure user_methods is always an object
+        $userMethods = $user->available_payout_methods;
+        if (is_array($userMethods) || empty($userMethods)) {
+            $userMethods = new \stdClass();
+        }
+
         return $this->sendSuccess([
             'available_methods' => $methods,
-            'user_methods' => $user->available_payout_methods ?? (object)[],
+            'user_methods' => $userMethods,
         ]);
     }
 
@@ -677,8 +683,26 @@ class VendorController extends Controller
             return $this->sendError(__('Invalid payout method'));
         }
 
-        $userMethods = $user->available_payout_methods ?? (object)[];
+        // ✅ FIX: Get existing methods and force to be an object
+        $existingMeta = $user->getMeta('vendor_payout_accounts');
+        if (empty($existingMeta)) {
+            $userMethods = new \stdClass();
+        } else {
+            $userMethods = json_decode($existingMeta);
+            // If decoding returned an array, convert to object
+            if (is_array($userMethods)) {
+                $userMethods = (object) $userMethods;
+            }
+            // If null, initialize as empty object
+            if ($userMethods === null) {
+                $userMethods = new \stdClass();
+            }
+        }
+
+        // Set the method account info
         $userMethods->$payoutMethod = (object) $accountInfo;
+
+        // Save as JSON
         $user->addMeta('vendor_payout_accounts', json_encode($userMethods));
 
         return $this->sendSuccess(['message' => __('Payout method saved successfully')]);
@@ -749,7 +773,8 @@ class VendorController extends Controller
         $payout->payout_method = $payoutMethod;
         $payout->amount = $amount;
         $payout->note_to_admin = $request->input('note_to_admin');
-        $payout->account_info = $methodDetail->user ?? '';
+        // ✅ FIX: json_encode the object to string for database storage
+        $payout->account_info = !empty($methodDetail->user) ? json_encode($methodDetail->user) : '';
         $payout->vendor_id = $user->id;
         $payout->status = 'initial';
 
