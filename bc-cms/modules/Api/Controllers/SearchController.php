@@ -34,9 +34,9 @@ class SearchController extends Controller
             [
                 'total'=>$total,
                 'total_pages'=>$rows->lastPage(),
+                'search_banner' => get_file_url(setting_item($type.'_page_search_banner'), 'full'),
                 'data'=>$rows->map(function($row) use ($type) {
                     $data = $row->dataForApi();
-                    // Add author_id and service type to the response
                     $data['author_id'] = $row->author_id ?? null;
                     $data['service_type'] = $type;
                     return $data;
