@@ -20,14 +20,14 @@ class DemoUserSeeder extends Seeder
 
         $user = new User();
         $data = [
-            'first_name'        => 'System',
-            'last_name'         => 'Admin',
-            'email'             => 'admin@'.$active_theme.'.test',
+            'first_name'        => 'Ennex',
+            'last_name'         => 'Dixkson',
+            'email'             => 'admin@'.$active_theme.'.travel',
             'password'          => bcrypt('admin123'),
             'phone'             => '112 666 888',
             'status'            => 'publish',
-            'city'            => 'New York',
-            'country'            => 'US',
+            'city'            => 'Dsm',
+            'country'            => 'TZ',
             'created_at'        => date("Y-m-d H:i:s"),
             'email_verified_at' => date("Y-m-d H:i:s"),
             'bio'               => 'We\'re designers who have fallen in love with creating spaces for others to reflect, reset, and create. We split our time between two deserts (the Mojave, and the Sonoran). We love the way the heat sinks into our bones, the vibrant sunsets, and the wildlife we get to call our neighbors.'
