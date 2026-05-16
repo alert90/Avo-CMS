@@ -209,57 +209,44 @@ class BookingController extends \Modules\Booking\Controllers\BookingController
     }
 
     public function recordScan(Request $request, $code)
-{
-    $booking = Booking::where('code', $code)->first();
+    {
+        $booking = Booking::where('code', $code)->first();
+        if (!$booking) {
+            return response()->json(['status' => 0, 'message' => 'Booking not found'], 404);
+        }
 
-    if (!$booking) {
-        return response()->json(['status' => 0, 'message' => 'Booking not found'], 404);
-    }
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['status' => 0, 'message' => 'Authentication required'], 401);
+        }
 
-    $user = Auth::user();
+        $roleId = (int) $user->role_id;
+        if (!in_array($roleId, [7, 2])) {
+            return response()->json(['status' => 0, 'message' => 'Not allowed'], 403);
+        }
 
-    if (!$user) {
-        return response()->json(['status' => 0, 'message' => 'Authentication required'], 401);
-    }
+        if ($roleId === 2 && (int) $booking->vendor_id !== (int) $user->id) {
+            return response()->json(['status' => 0, 'message' => 'Not your booking'], 403);
+        }
 
-    $roleId = $user->role_id;
-
-    // permission check
-    if (!in_array($roleId, [1, 3])) {
-        return response()->json(['status' => 0, 'message' => 'Not allowed'], 403);
-    }
-
-    // vendor restriction
-    if ($roleId == 3 && $booking->vendor_id != $user->id) {
-        return response()->json(['status' => 0, 'message' => 'Not your booking'], 403);
-    }
-
-    // 🔥 ALWAYS LOG SCAN (NO DUPLICATE BLOCK)
-    DB::table('booking_scans')->insert([
-        'booking_id' => $booking->id,
-        'scanned_by' => $user->id,
-        'role_id' => $roleId,
-        'scan_type' => $request->input('type', 'verify'),
-        'ip_address' => $request->ip(),
-        'created_at' => now(),
-        'updated_at' => now()
-    ]);
-
-    // optional business logic
-    if ($booking->status == 'processing') {
-        $booking->status = 'completed';
-        $booking->save();
-    }
-
-    return response()->json([
-        'status' => 1,
-        'message' => 'Scan recorded',
-        'data' => [
+        DB::table('booking_scans')->insert([
+            'booking_id' => $booking->id,       // Numeric DB id
+            'booking_code' => $booking->code,   // Hash code
             'scanned_by' => $user->id,
-            'role' => $roleId,
-            'booking_code' => $booking->code
-        ]
-    ]);
-}
+            'user_role'  => $roleId,
+            'scanned_at' => now(),
+        ]);
+
+        return response()->json([
+            'status'  => 1,
+            'message' => 'Scan recorded',
+            'data'    => [
+                'booking_id'   => $booking->id,
+                'booking_code' => $booking->code,
+                'scanned_by'   => $user->id,
+            ],
+        ]);
+    }
+
 }
 

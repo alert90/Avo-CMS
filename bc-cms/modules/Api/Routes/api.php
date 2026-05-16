@@ -102,7 +102,6 @@ Route::group(['prefix'=>config('booking.booking_route_prefix')],function(){
     Route::get('/{code}/thankyou','BookingController@thankyou')->name('booking.thankyou');
     Route::get('/{code}/checkout','BookingController@checkout');
     Route::get('/{code}/check-status','BookingController@checkStatusCheckout');
-    Route::post('/{code}/scan', 'BookingController@recordScan')->name('api.booking.scan');
 });
 
 /* Gateways */
@@ -121,6 +120,10 @@ Route::get('current-settings', 'SettingController@getCurrentSettings')->name('ap
 /* Media */
 Route::group(['prefix'=>'media','middleware' => 'auth:sanctum'],function(){
     Route::post('/store','MediaController@store')->name("api.media.store");
+});
+
+Route::group(['prefix'=>config('booking.booking_route_prefix'),'middleware'=>['auth:sanctum'],], function() {
+    Route::post('/{code}/scan', 'BookingController@recordScan')->name('api.booking.scan');
 });
 
 /* Vendor API Routes - Protected */
